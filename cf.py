@@ -11,6 +11,7 @@
 
 abbreviations = [
 	("IT", "INFORMATION TECHNOLOGY", ""),
+	("IE", "INDUSTRIAL ENGINEERING", ""),
 	("MBA", "BUSINESS ADMINISTRATION", ""),
 	("BA", "BUSINESS ADMINISTRATION", ""),
 	("ED", "EDUCATION"),
@@ -55,7 +56,7 @@ prefixes = [
 	"B A ", "B S", "A B ",
 	# layer 3
 	# ex: BSMS CS, MS MA
-	"MS ", "M S ",
+	"MS", "M S ",
 	"ASS ", "AS ", "A S ",
 	"MA ", "M A ",
 	 "M ",
@@ -78,6 +79,7 @@ prefixes = [
 	"GRADUATE ",
 	"MINOR ",
 	"MAJOR ",
+	"DEGREE ",
 	"CAREER ",
 	"CERTIFICATE ",
 	"MAJ ",

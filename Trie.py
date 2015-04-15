@@ -1,3 +1,6 @@
+# By Steve Hanov, 2011. Released to the public domain
+# Adopted from http://stevehanov.ca/blog/index.php?id=114
+
 # The Trie data structure keeps a set of words, organized with one node for
 # each letter. Each node has a branch for each letter that may follow it in the
 # set of words.

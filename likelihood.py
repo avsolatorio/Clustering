@@ -73,10 +73,11 @@ def likelihood_matrix(education_clusters, industry_clusters, education_data, ind
 	
 	return likelihood
 	# return likelihood
-
-# print likelihood_matrix(
-	# education_clusters = ['Business', 'Marketing', 'Technology'],
-	# industry_clusters = ['Stocks', 'Information'],
-	# education_data = [['Business Ad', 'Marketin'], 'Info Technology', 'Marketing', 'Computer Tech'],
-	# industry_data = ['Stock', 'Information', 'Stocks', 'tocks']
-# )
+'''
+print likelihood_matrix(
+	education_clusters = ['Business', 'Marketing', 'Technology'],
+	industry_clusters = ['Stocks', 'Information'],
+	education_data = [['Business Ad', 'Marketin'], 'Info Technology', 'Marketing', 'Computer Tech'],
+	industry_data = ['Stock', 'Information', 'Stocks', 'tocks']
+)
+'''
