@@ -64,15 +64,14 @@ class suffix_array(list):
 				lcp[i] = k
 				if k > 0: k -= 1
 		
-		# G = map(lambda i: G[i], sa)
 		
-		# self.sa = sa
+		# assign attributes
 		list.__init__(self, sa)
 		self.data = strings
 		self.lcp = lcp
 		self.S = S
 		self.G = G
-		self.string = '$'.join(strings)
+		self.string = '$'.join(strings) + '$'
 	
 	# slicer
 	def __getitem__(self, key):

@@ -11,7 +11,6 @@
 
 abbreviations = [
 	("IT", "INFORMATION TECHNOLOGY", ""),
-	("IE", "INDUSTRIAL ENGINEERING", ""),
 	("MBA", "BUSINESS ADMINISTRATION", ""),
 	("BA", "BUSINESS ADMINISTRATION", ""),
 	("ED", "EDUCATION"),
@@ -20,7 +19,6 @@ abbreviations = [
 	# # ("CE", "CIVIL ENGINEERING", ""),
 	("CS", "COMPUTER SCIENCE", ""),
 	("HRM", "HOTEL RESTAURANT MANAGEMENT", ""),
-	("THRM", "TOURISM HOTEL RESTAURANT MANAGEMENT", ""),
 	("HRTM", "HOTEL RESTAURANT TOURISM MANAGEMENT", ""),
 	("ICT", "INFORMATION TECHNOLOGY / COMMUNICATIONS TECHNOLOGY", ""),
 	("CTM", "COMMUNICATIONS TECHNOLOY / MANAGEMENT", ""),
@@ -56,7 +54,7 @@ prefixes = [
 	"B A ", "B S", "A B ",
 	# layer 3
 	# ex: BSMS CS, MS MA
-	"MS", "M S ",
+	"MS ", "M S ",
 	"ASS ", "AS ", "A S ",
 	"MA ", "M A ",
 	 "M ",
@@ -120,6 +118,7 @@ def replace_all(fr, to, s):
 	return s
 
 def remove_special_characters(s):
+	s = s.strip()
 	s = s.replace("'", "")
 	s = s.replace("&", " & ")
 	s = s.replace(" AND ", " & ")
@@ -257,30 +256,13 @@ industry_filters = [
 	remove_contiguous
 ]
 
-def merge(filters):
-	def filter_all(s):
-		for f in filters: s = f(str(s))
-		return s
-	return filter_all
+# cleans a single course
+def clean_course(course):
+	for f in course_filters: course = f(str(course))
+	return course
+
+# cleans a single industry
+def clean_industry(industry):
+	for f in industry_filters: industry = f(str(industry))
+	return industry
 		
-
-# main method to filter
-def course_clean(data):
-	return map(merge(course_filters), data)
-
-def industry_clean(data):
-	return map(merge(industry_filters), data)
-
-def read(filename):
-	ans = None
-	with open(filename, 'r') as f:
-		lines = f.readlines()
-		ans = [str(s.strip()) for s in lines]
-	return ans
-
-def write(data):
-	f = open('clean.txt', 'w')
-	for d in data:
-		f.write(d)
-		f.write('\n')
-	f.close()

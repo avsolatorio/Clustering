@@ -80,11 +80,13 @@ def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, al
 	ans.sort(key=len, reverse=True)
 	# normalize bridges
 	if heirarchy:
-		for i in xrange(len(ans)):
-			item = ans[i]
-			while len(item) == 1 and isinstance(item, list):
-				ans[i] = item[0]
-				item = ans[i]
+		while len(ans) == 1 and isinstance(ans[0], list):
+			ans = ans[0]
+		# for i in xrange(len(ans)):
+			# item = ans[i]
+			# while len(item) == 1 and isinstance(item, list):
+				# ans[i] = item[0]
+				# item = ans[i]
 		
 	
 	return ans
@@ -121,7 +123,7 @@ def lattice_spanning(data, min_common = 10, **kwargs):
 	return all
 				
 # O(nlogn) clustering
-def spanning_clusters(data, n_clusters = 2, **kwargs):
+def spanning_forest(data, n_clusters = 2, **kwargs):
 	
 	graph = suffix_array(data).similarity_matrix().items()
 	ind = spanning_tree(graph, len(data), n_clusters, **kwargs)
