@@ -87,6 +87,53 @@ def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, al
 		
 	
 	return ans
+
+def dense_matrix_spanning(matrix, data, include, eps):
+	graph = filter(lambda x: x[1] >= eps, matrix)
+	ind = spanning_tree(graph, len(data))
+	return graph, [map(lambda i: data[i], filter(lambda i: i in include, row)) for row in ind]
+
+def double_dense_matrix_spanning(matrix, data, min_common = 8, step = 1, eps = 0.4, leaf_size = 60, heirarchy = True, include = None, ind = None):
+
+	if ind == None:
+		ind = {entry:id for id, entry in enumerate(data)}
+		
+	if include == None:
+		include = set(range(len(data)))
+		
+	matrix, cl = dense_matrix_spanning(matrix, data, include, 2**min_common)
+	ans = []
+	ok = len(matrix) > 0
+	for c in cl:
+		if ok and (len(c) > leaf_size or edit_radius(c, eps) > eps):
+			include = set()
+			for entry in c:
+				include.add(ind[entry])
+			recluster = double_dense_matrix_spanning(matrix, data, min_common + step, step, eps, leaf_size, heirarchy, include, ind)
+			if heirarchy:
+				ans.append(recluster)
+			else:
+				ans.extend(recluster)
+		else:
+			ans.append(c)
+			
+	# keep big clusters in front
+	ans.sort(key=len, reverse=True)
+	# normalize bridges
+	if heirarchy:
+		for i in xrange(len(ans)):
+			item = ans[i]
+			if len(item) == 1 and isinstance(item, list):
+				ans[i] = item[0]
+				item = ans[i]
+	
+	return ans
+	
+
+def double_dense(data, min_common = 8, step = 1, eps = 0.4, leaf_size = 60, heirarchy = True):
+	sa = data if isinstance(data, suffix_array) else suffix_array(data)
+	matrix = sa.similarity_matrix().items()
+	return double_dense_matrix_spanning(matrix, data, min_common, step, eps, leaf_size, heirarchy)
 	
 	
 # filters noise based on expected feature count
