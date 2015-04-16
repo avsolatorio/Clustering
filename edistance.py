@@ -41,7 +41,8 @@ def edit_distance(a, b, eps = 1, ignore_spaces = False):
 	return cur[m]
 
 def edit_ratio(a, b, eps = 1, ignore_spaces = False):
-	return float(edit_distance(a,b)) / max(len(a), len(b))
+	maxlen = max(len(a), len(b))
+	return float(edit_distance(a,b)) / maxlen if maxlen > 0 else 0
 	
 def edit_radius(data, eps = 1, ignore_spaces = False):
 	'''

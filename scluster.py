@@ -58,64 +58,84 @@ import numpy as np
 		
 		
 '''
-def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, algorithm = 'lattice', heirarchy = True, **kwargs):
+def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, algorithm = 'lattice', heirarchy = True):
 	
-	# get initial clusters
+	# immediately instantiate into suffix array for later
+	if isinstance(data, SuffixArray):
+		suffix_array = data
+		data = suffix_array.data
+	else:
+		# base case: check first if singleton
+		if len(data) == 1: return data
+		suffix_array = SuffixArray(data)
+		
+	# draft initial clusters
 	if algorithm == 'lattice':
-		cl = lattice_spanning(data, min_common, **kwargs)
+		draft = lattice_spanning(suffix_array, min_common)
 		
 	elif algorithm == 'dense':
-		cl = dense_spanning(data, min_common, **kwargs)
-		
-	ans = []
-	for c in cl:
-		if len(c) > leaf_size or edit_radius(c, eps) > eps:
-			# recluster
-			recluster = double_cluster(c, min_common + step, step, eps, leaf_size, algorithm, heirarchy, **kwargs)
-			if heirarchy: ans.append(recluster)
-			else: ans.extend(recluster)
-		else:
-			ans.append(c)
-	# keep big clusters in front
-	ans.sort(key=len, reverse=True)
-	# normalize bridges
-	if heirarchy:
-		while len(ans) == 1 and isinstance(ans[0], list):
-			ans = ans[0]
-		# for i in xrange(len(ans)):
-			# item = ans[i]
-			# while len(item) == 1 and isinstance(item, list):
-				# ans[i] = item[0]
-				# item = ans[i]
-		
+		draft = dense_spanning(suffix_array, min_common)
 	
-	return ans
+	
+	if len(draft) == 1:
+		# special case
+		# no valid clustering found using current parameters
+		# reuse suffix array to avoid recomputation
+		return double_cluster(suffix_array, min_common + step, step, eps, leaf_size, algorithm, heirarchy)
+	
+	
+	final_clustering = []
+		
+	for subcluster in draft:
+		# check first if subcluster is expandable or not
+		if len(subcluster) <= leaf_size and edit_radius(subcluster, eps) <= eps:
+			# subcluster is ok, no need for expansion
+			final_clustering.append(subcluster)
+			
+		else:
+			# subcluster can still be expanded
+			expanded = double_cluster(subcluster, min_common + step, step, eps, leaf_size, algorithm, heirarchy)
+			if heirarchy: final_clustering.append(expanded)
+			else: final_clustering.extend(expanded)
+			
+	# keep big clusters in front
+	return sorted(final_clustering, key=len, reverse=True)
 	
 	
 # filters noise based on expected feature count
-def dense_spanning(data, min_common = 8, **kwargs):
-
-	sa = data if isinstance(data, SuffixArray) else SuffixArray(data)
-	graph = sa.similarity_graph()
+def dense_spanning(data, min_common = 8):
+	
+	if isinstance(data, SuffixArray):
+		suffix_array = data
+		data = suffix_array.data
+	else:
+		suffix_array = SuffixArray(data)
+	
+	graph = suffix_array.similarity_graph()
 	eps = 2 ** min_common
 	graph = filter(lambda x: x[1] >= eps, graph)
-	ind = spanning_tree(graph, len(data), **kwargs)
+	ind = spanning_tree(graph, len(data))
 	return [map(lambda i: data[i], row) for row in ind]
 	
 
-def lattice_spanning(data, min_common = 10, **kwargs):
+def lattice_spanning(data, min_common = 10):
+	
+	if isinstance(data, SuffixArray):
+		suffix_array = data
+		data = suffix_array.data
+	else:
+		suffix_array = SuffixArray(data)
 
-	sa = data if isinstance(data, SuffixArray) else SuffixArray(data)
 	f = range(len(data))
 	def find(x):
 		if x == f[x]:
 			return x
 		f[x] = find(f[x])
 		return f[x]
-	for conn in sa.connectivity(min_common):
+	for conn in suffix_array.connectivity(min_common):
 		for i in xrange(conn.start + 1, conn.stop):
-			a = sa.G[sa[i-1]]
-			b = sa.G[sa[i]]
+			a = suffix_array.G[suffix_array[i-1]]
+			b = suffix_array.G[suffix_array[i]]
 			f[find(a)] = find(b)
 	
 	m = [[] for x in xrange(len(data))]
@@ -125,13 +145,13 @@ def lattice_spanning(data, min_common = 10, **kwargs):
 	return all
 				
 # O(nlogn) clustering
-def spanning_forest(data, n_clusters = 2, **kwargs):
+def spanning_forest(data, n_clusters = 2):
 	
 	graph = data.similarity_graph() if isinstance(data, SuffixArray) else SuffixArray(data).similarity_graph()
-	ind = spanning_tree(graph, len(data), n_clusters, **kwargs)
+	ind = spanning_tree(graph, len(data), n_clusters)
 	return [map(lambda i: data[i], row) for row in ind]
 
-def spanning_tree(graph, n, n_clusters = 1, **kwargs):
+def spanning_tree(graph, n, n_clusters = 1):
 
 	needed = n - n_clusters
 	
@@ -159,14 +179,14 @@ def spanning_tree(graph, n, n_clusters = 1, **kwargs):
 	for i in xrange(n):
 		clusters[find(i)].append(i)
 		
-	return sorted(filter(lambda x: len(x) > 0, clusters), key=len, reverse=True)
+	return filter(lambda x: len(x) > 0, clusters)
 
 
-
+# for debugging purposes
 depth = 0
 prev = 0
 	
-def label_heirarchy(tree):
+def label_heirarchy(tree, verbose = True):
 
 	global depth
 	global prev
@@ -174,21 +194,20 @@ def label_heirarchy(tree):
 	
 	if not isinstance(tree, list):
 		
-		print ('-' * depth) + '+ %s' % (tree)
+		if verbose: print ('-' * depth) + '+ %s' % (tree)
 		depth -= 1
 		
-		return (tree, 1, tree)
+		return (tree, None)
 		
+	subtree = map(label_heirarchy, tree)
+	label, child = zip(*subtree)
 	
-	h = map(label_heirarchy, tree)
-	label, count, child = zip(*h)
-	
-	dist = [np.average([edit_distance(a, b) for b in label]) for a in label]
+	dist = [np.average([edit_ratio(a, b) for b in label]) for a in label]
 	id = min(range(len(dist)), key=lambda x: dist[x])
-	print ('-' * depth) + '+ %s' % (label[id])
+	if verbose: print ('-' * depth) + '+ %s' % (label[id])
 	depth -= 1
 	
 	
-	return (label[id], sum(count), list(zip(label, child)))
+	return (label[id], list(zip(label, child)))
 	
 	
