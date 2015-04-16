@@ -1,6 +1,7 @@
 import numpy as np
 
 def edit_distance(a, b, eps = 1):
+	
 	'''
 		Implements k-bounded Damerau-Levenshtein (edit) distance
 		via epsilon (percentage of edits). Counts inserting,
@@ -17,6 +18,7 @@ def edit_distance(a, b, eps = 1):
 		a,b = b,a
 		n,m = m,n
 	
+	# check first if strings are in memo
 	cur, prev = range(m+1), None
 	k = eps * max(n,m)
 	
@@ -26,9 +28,11 @@ def edit_distance(a, b, eps = 1):
 			insert = cur[j-1] + 1
 			delete = prev[j] + 1
 			change = prev[j-1] + int(a[i-1] != b[j-1])
-			swap = prev[j-2] + 1 if prev2 and a[i-2:i] == b[j-2:j] else change
+			swap = prev[j-2] + 1 if prev2 and a[i-2:i] == b[j-2:j][::-1] else change
 			cur.append(min(insert, delete, change, swap))
-		if min(cur) > k: return 1
+		if min(cur) > k:
+			return 1
+	
 	return cur[m]
 
 def edit_ratio(a, b, eps = 1):
