@@ -10,7 +10,7 @@ cleaners = {
 def clean(data, style):
 	if style not in cleaners:
 		raise "style must be: " + str(cleaners.keys())
-	return map(cleaners[style], data)
+	return map(cleaners[style], data) if isinstance(data, list) else cleaners[style](data)
 
 def read(filename):
 	ans = None

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sarray import suffix_array
+from suffix import SuffixArray
 from edistance import *
 import numpy as np
 
@@ -94,8 +94,9 @@ def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, al
 	
 # filters noise based on expected feature count
 def dense_spanning(data, min_common = 8, **kwargs):
-	sa = data if isinstance(data, suffix_array) else suffix_array(data)
-	graph = sa.similarity_matrix().items()
+
+	sa = data if isinstance(data, SuffixArray) else SuffixArray(data)
+	graph = sa.similarity_graph()
 	eps = 2 ** min_common
 	graph = filter(lambda x: x[1] >= eps, graph)
 	ind = spanning_tree(graph, len(data), **kwargs)
@@ -103,7 +104,8 @@ def dense_spanning(data, min_common = 8, **kwargs):
 	
 
 def lattice_spanning(data, min_common = 10, **kwargs):
-	sa = data if isinstance(data, suffix_array) else suffix_array(data)
+
+	sa = data if isinstance(data, SuffixArray) else SuffixArray(data)
 	f = range(len(data))
 	def find(x):
 		if x == f[x]:
@@ -125,7 +127,7 @@ def lattice_spanning(data, min_common = 10, **kwargs):
 # O(nlogn) clustering
 def spanning_forest(data, n_clusters = 2, **kwargs):
 	
-	graph = suffix_array(data).similarity_matrix().items()
+	graph = data.similarity_graph() if isinstance(data, SuffixArray) else SuffixArray(data).similarity_graph()
 	ind = spanning_tree(graph, len(data), n_clusters, **kwargs)
 	return [map(lambda i: data[i], row) for row in ind]
 
