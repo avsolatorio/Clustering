@@ -227,9 +227,12 @@ class Trie(object):
 		node.word = originalword
 			
 	
-	def nearest_neighbor(self, word):
+	def neighbor_iterator(self, word):
 		# returns nearest neighbor
-		# to use: trie.nearest_neighbor(word).next()
+		# to use: it = trie.neighbor_iterator(word)
+		#		first = it.next()
+		#		second = it.next()
+		# to force stop: it.send('stop')
 		
 		if not self.case_sensitive:
 			word = word.upper()
@@ -245,22 +248,21 @@ class Trie(object):
 		from heapq import heappush, heappop
 		queue = []
 		
-		# sequence: (distance, is_end, node, prevletter, prev, prev2)
+		# sequence: (distance, node, has_spread, is_end, prevletter, prev, prev2)
 		cur = range(n + 1)
-		heappush(queue, (0, False, self, None, None, cur))
+		heappush(queue, (0, self, False, False, None, None, cur))
 		# heappush(queue, (n + 1, True, self, None, None, cur))
 		
-		has_spread = set()
 		
 		while len(queue) > 0:
 		
-			distance, is_end, node, prevletter, prev2, prev = heappop(queue)
+			distance, node, has_spread, is_end, prevletter, prev2, prev = heappop(queue)
 			if is_end and node.word != None and len(node.word) != 0:
-				yield (node.word, distance)
+				check = yield (node.word, distance)
+				if check == 'stop': return
 			
-			if node not in has_spread:
+			if not has_spread:
 				
-				has_spread.add(node)
 				# add children
 				for letter in node.children:
 					# build memo row first
@@ -280,10 +282,10 @@ class Trie(object):
 					nextnode = node.children[letter]
 					minimum = min(cur)
 					
-					heappush(queue, (minimum, minimum == cur[-1], nextnode, letter, prev, cur))
+					heappush(queue, (minimum, nextnode, False, minimum == cur[-1], letter, prev, cur))
 					
 					if minimum != cur[-1]:
-						heappush(queue, (cur[-1], True, nextnode, letter, prev, cur))
+						heappush(queue, (cur[-1], nextnode, True, True, letter, prev, cur))
 			
 	
 	# The search function returns a list of all words that are less than the given
